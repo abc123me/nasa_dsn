@@ -4,6 +4,8 @@ if(sys.version_info[0] < 3): #Check python version
     raise "This only supports python3!"
 
 from subprocess import call
+from os.path import isfile
+from os.path import isdir
 class GPIO:
   pinID = 0;
   pinStr = ""
@@ -18,8 +20,14 @@ class GPIO:
     
   #Export and unexport subroutines handled by setMode and destructor
   def export(self): #Exports the pin
-    #TODO: Add GPIO export code
+    if(not isfile("/sys/class/gpio/export")):
+      raise "/sys/class/gpio/export does not exist!"
+    f = open("/sys/class/gpio/export", "w")
+    f.write(pinID);
+    f.close()
     pinStr = "/sys/class/gpio" + pinID
+    if(not isdir(pinStr)):
+      raise "Failed to export GPIO pin: " + pinStr
     exported = True
   def unexport(self): #Unexports the pin
     #TODO: Add GPIO unexport code
