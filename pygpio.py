@@ -57,7 +57,7 @@ class GPIOPin:
    def unexport(self):
       fwrite("/sys/class/gpio/unexport", pinID)
       if(self.checkExport()):
-         raise GPIOError(self, "unexport", "Failed to unexport GPIO pin: " + self.pinStr
+         raise GPIOError(self, "unexport", "Failed to unexport GPIO pin: " + self.pinStr)
    #Checks if pin is exported
    def checkExport(self):
       exp = isdir(pinStr)
