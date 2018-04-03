@@ -22,8 +22,8 @@ class GPIOError(Exception): #Base class for handling GPIO related errors
       return "GPIO Error during " + self.step + " step! Caused by: " + self.message
 def fwrite(file, toWrite):
    f = open(file, "w")
-   f.write(toWrite)
-   f.close()
+   f.write(str(toWrite))
+   # f.close()
 #A GPIOPin class for declaring GPIO pins
 class GPIOPin:
    def __init__(self, pin): #Constructor called when object is created, takes in the pin number for the specified gpio pin
@@ -44,43 +44,44 @@ class GPIOPin:
       except NameError:
          pass
    def __str__(self):
-      return "GPIO pin #" + pinID
-   
+      return "GPIO pin " + self.pinID
+
    #Export and unexport subroutines handled by setMode and destructor, not the end user
    #Exports the pin
-   def export(self): 
-      fwrite("/sys/class/gpio/export", pinID)
-      self.pinStr = "/sys/class/gpio" + self.pinID
+   def export(self):
+      fwrite("/sys/class/gpio/export", self.pinID)
+      self.pinStr = "/sys/class/gpio/gpio" + str(self.pinID)
       if(not self.checkExport()):
          raise GPIOError(self, "export", "Failed to export GPIO pin: " + self.pinStr)
    #Unexports the pin
    def unexport(self):
-      fwrite("/sys/class/gpio/unexport", pinID)
+      fwrite("/sys/class/gpio/unexport", self.pinID)
       if(self.checkExport()):
          raise GPIOError(self, "unexport", "Failed to unexport GPIO pin: " + self.pinStr)
    #Checks if pin is exported
    def checkExport(self):
-      exp = isdir(pinStr)
+      exp = isdir(self.pinStr)
       self.exported = exp;
       return exp;
-   
+
    #Sets the mode of the GPIO pin, should be handled by end user first
-   def setMode(self, isOutput): 
+   def setMode(self, isOutput):
       mode = "in"
-      if(self.isOutput):
+      if(isOutput):
          mode = "out"
       if(not self.exported):
-         export();
+         self.export()
       pinf = self.pinStr + "/direction"
-      if(not isfile(pinf):
+      if(not isfile(pinf)):
          raise GPIOError(self, "setMode", "Unable to set " + pinf + " to " + self.mode)
       fwrite(pinf, mode)
       if(isOutput):
-         self.valueFile = open(self.pinStr + "/value", "rw")
+         self.valueFile = open(self.pinStr + "/value", "w")
       else:
          self.valueFile = open(self.pinStr + "/value", "r")
       self.mode = mode
-         
+      self.isOutput = isOutput
+
    #Reading and writing to pins, should be handled by end user
    #Write a value to the specified GPIO pin
    def write(self, val):
@@ -91,10 +92,8 @@ class GPIOPin:
          raise GPIOError(self, "write", "Pin not exported, export with setMode(mode) or export()")
       if(not self.isOutput):
          raise GPIOError(self, "write", "Cannot write to input pin, set mode with setMode(mode)!")
-      fwrite(self.pinStr + "/value", "w")
+      fwrite(self.pinStr + "/value", w)
    #Read the value of a specified GPIO pin
    def read(self):
       out = self.valueFile.read()
       return int(out)
-         
-      
