@@ -41,7 +41,7 @@ class GPIOPin:
          self.unexport()
       try:
          self.valueFile.close()
-      except NameError:
+      except NameError: #I expect this because it WILL happen if they don't set the mode
          pass
    def __str__(self):
       return "GPIO pin " + self.pinID
