@@ -90,6 +90,7 @@ class GPIOPin:
             raise GPIOError(self, "write", "Cannot write to input pin, set mode with setMode(mode)!")
         fwrite(self.pinStr + "/value", w)
     #Read the value of a specified GPIO pin
-    def read(self):
+    def digitalRead(self):
         out = self.valueFile.read()
-        return int(out)
+        val = int(out)
+        return (val > 0)
