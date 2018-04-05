@@ -39,10 +39,6 @@ class GPIOPin:
     def __del__(self): #Deconstructer called when object is no longer used
         if(self.checkExport()):
             self.unexport()
-        try:
-            self.valueFile.close()
-        except NameError: #I expect this because it WILL happen if they don't set the mode
-            pass
     def __str__(self):
         return "GPIO pin " + self.pinID
 
