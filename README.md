@@ -11,3 +11,4 @@ pin.write(BOOLEAN_VALUE)                 #Only works for output pins
 pin.read()                               #Only works for input pins
 ```
 Also, The GPIO library requires superuser privledges so use sudo or run as root
+An example led blink script `blink_example.py` was created to demonstrate how to use the GPIO library
