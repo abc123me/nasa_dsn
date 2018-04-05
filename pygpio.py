@@ -40,7 +40,7 @@ class GPIOPin:
         if(self.checkExport()):
             self.unexport()
     def __str__(self):
-        return "GPIO pin " + self.pinID
+        return "GPIO pin " + str(self.pinID)
 
     #Export and unexport subroutines handled by setMode and destructor, not the end user
     #Exports the pin
