@@ -1,4 +1,4 @@
-import pygpio, sys
+import pygpio
 from time import sleep
 
 pin = pygpio.GPIOPin(5)
