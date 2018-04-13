@@ -77,6 +77,11 @@ class GPIOPin:
             self.valueFile = open(self.pinStr + "/value", "r")
         self.mode = mode
         self.isOutput = isOutput
+    #Cool extensions methods for setMode
+    def setInput(self):
+        self.setMode(False)
+    def setOutput(self):
+        self.setMode(True)
 
     #Reading and writing to pins, should be handled by end user
     #Write a value to the specified GPIO pin
