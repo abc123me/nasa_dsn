@@ -1,53 +1,74 @@
 import time
 import smbus
 import pygpio
+import adlib
 
-#Set up I2C
-bus=smbus.SMBus(0)
-bus.write_byte(0x35,0x80)
-bus.write_byte(0x35,0x01)
-buffer=bus.read_i2c_block_data(0x40,0xe3,2)
-#buffer=[1,2]
-print ("%02x %02x" % (buffer[0], buffer[1]))
-advalue = 256*int(buffer[1]) + int(buffer[0])
-print ("advalue = %d" % advalue)
-
-pin7 = pygpio.GPIOPin(4)
-pin7.setMode(False)
-
-pin8 = pygpio.GPIOPin(14)
-pin8.setMode(False)
-
-pin10 = pygpio.GPIOPin(15)
-pin10.setMode(False)
-
-pin11 = pygpio.GPIOPin(17)
-pin11.setMode(False)
-
-pin12 = pygpio.GPIOPin(18)
-pin12.setMode(False)
-
-pin13 = pygpio.GPIOPin(27)
-pin13.setMode(False)
-
-pin26 = pygpio.GPIOPin(7)
-pin26.setMode(True)
-
-pin27= pygpio.GPIOPin(IDSD)
-pin27.setMode(True)
-
-pin23 = pygpio.GPIOPin(11)
-pin23.setMode(True)
-
-pin24 = pygpio.GPIOPin(8)
-pin24.setMode(True)
-
-pin21 = pygpio.GPIOPin(9)
-pin21.setMode(True)
-
-pin22 = pygpio.GPIOPin(25)
-pin22.setMode(True)
-
+''' RELAY CONTROL PINS
+18		*		Relay Control 8	GPIO 24	Turns on Noise Source
+19		*		Relay Control 7	GPIO 10	Turns on Translator path
+20	GND					
+21		*		Relay Control 6	GPIO 9	BBSW 3 A setting
+22		*		Relay Control 5	GPIO 25	BBSW 3 B setting
+23		*		Relay Control 4	GPIO 11	BBSW 2 A setting
+24		*		Relay Control 3	GPIO 8	BBSW 2 B setting
+25	GND					
+26		*		Relay Control 2	GPIO 7	BBSW 1 A setting
+27		*		Relay Control 1	IDSD	BBSW 1 B setting
+'''
+print("Initializing relay pins... ")
+relayCtrl = [ #Initialize as an array for easier addressing
+    pygpio.GPIOPin(IDSD), #Apparently this goes to the IDSD pin, to my knowledge this pin cannot be used as GPIO? 
+    pygpio.GPIOPin(7), 
+    pygpio.GPIOPin(8), 
+    pygpio.GPIOPin(11), 
+    pygpio.GPIOPin(25), 
+    pygpio.GPIOPin(9), 
+    pygpio.GPIOPin(10), 
+    pygpio.GPIOPin(24)]
+for pin in relayCtrl:
+    pin.setOutput()
+    
+''' TRANSMIT LEVEL CONTROL BITS
+28		*		Trans Level Ctl Bit 0	IDSC	 Signal Attn Bit 0 LSB   .25 dB
+29		*		Trans Level Ctl Bit 1	GPIO 5 	 Signal Attn Bit 1       .5 dB
+30	GND					
+31		*		Trans Level Ctl Bit 2	GPIO 6	 Signal Attn Bit 2       1 dB
+32		*		Trans Level Ctl Bit 3	GPIO 12	 Signal Attn Bit 3       2 dB
+33		*		Trans Level Ctl Bit 4	GPIO 13	 Signal Attn Bit 4       4 dB
+34	GND					
+35		*		Trans Level Ctl Bit 5	GPIO 19  Signal Attn Bit 5       8 dB
+36		*		Trans Level Ctl Bit 6	GPIO 16	 Signal Attn Bit 6       16 dB
+37		*		Trans Level Ctl Bit 7	GPIO 26	 Signal Attn Bit 7 MSB   32 dB
+'''
+transLevel = [ 
+    pygpio.GPIOPin(IDSC), #Apparently this goes to the IDSC pin, to my knowledge this pin cannot be used as GPIO? 
+    pygpio.GPIOPin(5), 
+    pygpio.GPIOPin(6), 
+    pygpio.GPIOPin(12), 
+    pygpio.GPIOPin(13), 
+    pygpio.GPIOPin(19), 
+    pygpio.GPIOPin(16), 
+    pygpio.GPIOPin(25)]
+for pin in transLevel:
+    pin.setOutput()
+def decibelsToBinary(num):
+	val = [False] * 8
+	for i in range(7, -1, -1):
+		mdbv = 2 ** (i - 2)
+		if(num >= mdbv):
+			num = num - mdbv;
+			val[i] = True
+	return val
+def setTransmitLevel(db):
+    val = [False] * 8
+	for i in range(7, -1, -1):
+		mdbv = 2 ** (i - 2)
+		if(num >= mdbv):
+			num = num - mdbv;
+			val[i] = True
+    for i in range(0, 8):
+        transLevel[i].write(val[i])
+        
 print(str(rdbbsw(1)) + ", " + str(rdbbsw(2)))
 
 def rdbbsw(1)
@@ -96,5 +117,4 @@ def rdnoisesw()
 def wrnoisesw()
     #Change noise switch position.
 def rdADch(ad)
-
 
