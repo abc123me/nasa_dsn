@@ -12,7 +12,7 @@ if(sys.version_info[0] < 3): #Check python version
 from subprocess import call
 from os.path import isfile
 from os.path import isdir
-
+import colors
 
 
 #A GPIOError class for making debugging of GPIO related errors alot easier
@@ -115,10 +115,7 @@ class EmulatedGPIOPin:
         self.pinID = pin
         self.exported = False
         self.isOutput = False
-        print("Emulating GPIO pin: " + str(self.pinID))
         from random import randint
-    def __del__(self): #Deconstructer called when object is no longer used
-        print("Stopped emulation of GPIO pin: " + str(self.pinID))
     def __str__(self):
         return "Emulated GPIO pin " + str(self.pinID)
 
@@ -126,11 +123,9 @@ class EmulatedGPIOPin:
     #Exports the pin
     def export(self):
         self.exported = True
-        print("Exported GPIO pin: " + str(self.pinID))
     #Unexports the pin
     def unexport(self):
         self.exported = False
-        print("Un-Exported GPIO pin: " + str(self.pinID))
     #Checks if pin is exported
     def checkExport(self):
         return self.exported;
@@ -142,7 +137,11 @@ class EmulatedGPIOPin:
             mode = "out"
         if(not self.checkExport()):
             self.export()
-        print("Set GPIO pin " + str(self.pinID) + " to output!")
+        val = colors.magenta + "input"
+        if(isOutput):
+            val = colors.yellow + "output"
+        val = val + colors.cyan
+        print(colors.cyan + "Set GPIO pin " + str(self.pinID) + " to " + val + "!" + colors.reset)
         self.mode = mode
         self.isOutput = isOutput
     #Cool extensions methods for setMode
@@ -154,14 +153,14 @@ class EmulatedGPIOPin:
     #Reading and writing to pins, should be handled by end user
     #Write a value to the specified GPIO pin
     def write(self, val):
-        w = "0"
-        if(val):
-            w = "1"
         if(not self.exported):
             raise GPIOError(self, "write", "Pin not exported, export with setMode(mode) or export()")
         if(not self.isOutput):
             raise GPIOError(self, "write", "Cannot write to input pin, set mode with setMode(mode)!")
-        print("Wrote " + w + " to GPIO " + str(self.pinID))
+        if(val):
+            print(colors.cyan + "Set GPIO " + str(self.pinID) + " to " + colors.green + "HIGH" + colors.reset)
+        else:
+            print(colors.cyan + "Set GPIO " + str(self.pinID) + " to " + colors.red + "LOW" + colors.reset)
     #Read the value of a specified GPIO pin
     def digitalRead(self):
         return (randint(0, 100) > 50)
