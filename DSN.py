@@ -1,6 +1,6 @@
 import sys
 if(sys.version_info[0] < 3): #Check python version
-    raise "This only supports python3!"
+	raise "This only supports python3!"
 
 import time
 from pygpio import EmulatedGPIOPin as GPIOPin
@@ -55,14 +55,14 @@ print(colors.green + "Success!" + colors.reset)
 print(colors.yellow + "Initializing transmit level pins..." + colors.reset)
 transLevel = [GPIOPin(1), GPIOPin(5), GPIOPin(6), GPIOPin(12), GPIOPin(13), GPIOPin(19), GPIOPin(16), GPIOPin(25)]
 for pin in transLevel:
-    pin.setOutput()
-    pin.write(False)
+	pin.setOutput()
+	pin.write(False)
 def setTransmitLevel(db):
-    val = utils.decibelsToBinary(db)
-    for i in range(0, 8): #First set them all to zero to make sure we don't accidentally transmit on a higher power then we want
-        transLevel[i].write(False)    
-    for i in range(0, 8): #This will set the lowest bits FIRST so the power will start off small and rise
-        transLevel[i].write(val[i])
+	val = utils.decibelsToBinary(db)
+	for i in range(0, 8): #First set them all to zero to make sure we don't accidentally transmit on a higher power then we want
+		transLevel[i].write(False)    
+	for i in range(0, 8): #This will set the lowest bits FIRST so the power will start off small and rise	
+		transLevel[i].write(val[i])
 print(colors.yellow + "Setting attenuator to 0 dB" + colors.reset)
 setTransmitLevel(0)
 print(colors.green + "Success!" + colors.reset)
@@ -74,43 +74,91 @@ Relay Control 8	    GPIO 24 	Turns on Noise Source
 Relay Control 7	    GPIO 10 	Turns on Translator path  
 '''
 print(colors.yellow + "Initializing status pins" + colors.reset)
-noiseStatus = pygpio.GPIOPin(22)
-translatorStatus = pygpio.GPIOPin(23)
+noiseStatus = GPIOPin(22)
+translatorStatus = GPIOPin(23)
 noiseStatus.setInput()
 translatorStatus.setInput()
 def setTranslatorPath(enable):
-    if(enable):
-        translatorPathEnable.write(True)
-        time.sleep(0.25)
-        if(not translatorStatus.digitalRead()):
+	if(enable):
+		translatorPathEnable.write(True)
+		time.sleep(0.25)
+		if(not translatorStatus.digitalRead()):
 			print(colors.red + "Translator failed to turn on within 0.25s" + colors.reset)
-            raise "Translator did not turn on!"
-    else:
-        translatorPathEnable.write(False)
-        time.sleep(0.25)
-        if(translatorStatus.digitalRead()):
+			raise "Translator did not turn on!"
+	else:
+		translatorPathEnable.write(False)
+		time.sleep(0.25)
+		if(translatorStatus.digitalRead()):
 			print(colors.red + "Translator failed to turn off within 0.25s" + colors.reset)
-            raise "Translator did not turn off, did the relay contacts weld together?"
+			raise "Translator did not turn off, did the relay contacts weld together?"
 def setNoiseSource(enable):
-    if(enable):
-        noiseSourceEnable.write(True)
-        time.sleep(0.25)
-        if(not noiseStatus.digitalRead()):
+	if(enable):
+		noiseSourceEnable.write(True)
+		time.sleep(0.25)
+		if(not noiseStatus.digitalRead()):
 			print(colors.red + "Noise source failed to turn on within 0.25s" + colors.reset)
-            raise "Noise source did not turn on!"
-    else:
-        noiseSourceEnable.write(False)
-        time.sleep(0.25)
-        if(noiseStatus.digitalRead()):
+			raise "Noise source did not turn on!"
+	else:
+		noiseSourceEnable.write(False)
+		time.sleep(0.25)
+		if(noiseStatus.digitalRead()):
 			print(colors.red + "Noise source failed to turn off within 0.25s" + colors.reset)
-            raise "Noise source did not turn off, did the relay contacts weld together?"
+			raise "Noise source did not turn off, did the relay contacts weld together?"
 print(colors.green + "Success!" + colors.reset)
+print(colors.yellow + "Initializing baseball switch logic..." + colors.reset)
+class BaseballSwitch:
+	def __init__(self, name, settingA, settingB, positionA, positionB):
+		self.setA = settingA
+		self.setB = settingB
+		self.posA = positionA
+		self.posB = positionB
+		self.name = str(name)
+	def initGPIO(self):
+		self.posA.setOutput()
+		self.posB.setOutput()
+		self.reset()
+		self.setA.setInput()
+		self.setB.setInput()
+	def setPosition(self, isAPosition):
+		self.reset()
+		if(isAPosition):
+			self.posA.write(True)
+			time.sleep(0.25)
+			pos = self.getPosition()
+			if(pos != "a"):
+				print(colors.red + "Error: Baseball switch " + self.name + " did not switch to position A within 0.25s it is still in position " + pos + colors.reset)
+				raise "Baseball switch " + self.name + " did not switch to position A within 0.25s it is still in position " + pos
+		else:
+			self.posB.write(True)
+			time.sleep(0.25)
+			pos = self.getPosition()
+			if(pos != "b"):
+				print(colors.red + "Error: Baseball switch " + self.name + " did not switch to position B within 0.25s it is still in position " + pos + colors.reset)
+				raise "Baseball switch " + self.name + " did not switch to position B within 0.25s it is still in position " + pos
+	def getPositon(self):
+		a = self.setA.digitalRead()
+		b = self.setB.digitalRead()
+		if(a and (not b)):
+			return "a"
+		if(b and (not a)):
+			return "b"
+		if(not (a and b)):
+			print(colors.red + "Error: Baseball switch is not in position A nor position B" + colors.reset)
+			raise "Baseball switch is not in position A nor position B?"
+		print(colors.red + "Error: Baseball switch is in position A and position B?" + colors.reset)
+		raise "Baseball switch is in position A and position B?"
+	def reset(self):
+		self.posA.write(False)
+		self.posB.write(False)
+		
 ''' BASEBALL SWITCH CONTROL
 =============CONTROL PINS=================================
-21		*		Relay Control 6	GPIO 9		BBSW 3 A setting
-22		*		Relay Control 5	GPIO 25		BBSW 3 B setting
+26		*		Relay Control 2	GPIO 7		BBSW 1 A setting
+27		*		Relay Control 1	IDSD GPIO 0	BBSW 1 B setting
 23		*		Relay Control 4	GPIO 11		BBSW 2 A setting
 24		*		Relay Control 3	GPIO 8		BBSW 2 B setting
+21		*		Relay Control 6	GPIO 9		BBSW 3 A setting
+22		*		Relay Control 5	GPIO 25		BBSW 3 B setting
 =============STATISTICS===================================
 7			*	BBSW1  Stat 1	GPIO 4		BBSW 1 Pos A
 8			*	BBSW1  Stat 2	GPIO 14		BBSW 1 Pos B
@@ -119,56 +167,11 @@ print(colors.green + "Success!" + colors.reset)
 12			*	BBSW3  Stat 1	GPIO 18		BBSW 3 Pos A
 13			*	BBSW3  Stat 2	GPIO 27		BBSW 3 Pos B
 '''
-print(colors.yellow + "Initializing baseball switch logic..." + colors.reset)
-
+#def __init__(self, name, settingA, settingB, positionA, positionB):
+baseballSwitch1 = BaseballSwitch("BBSW1", GPIOPin(7), GPIOPin(0), GPIOPin(4), GPIOPin(14))
+baseballSwitch1.initGPIO()
+baseballSwitch2 = BaseballSwitch("BBSW2", GPIOPin(11), GPIOPin(8), GPIOPin(15), GPIOPin(17))
+baseballSwitch2.initGPIO()
+baseballSwitch3 = BaseballSwitch("BBSW3", GPIOPin(9), GPIOPin(25), GPIOPin(18), GPIOPin(27))
+baseballSwitch3.initGPIO()
 print(colors.green + "Success" + colors.reset)
-
-'''
-print(str(rdbbsw(1)) + ", " + str(rdbbsw(2)))
-def rdbbsw(1)
-    #Read baseball switch 1 status
-    read(4)
-    return valueOfPin
-    #pin 7, 8 (GPIO 4, 14)
-def rdbbsw(2)
-    #Read baseball switch 2 status
-    #pin 10, 11 (GPIO 15, 17)
-    return valueOfPin
-def rdbbsw(3)
-    #Read baseball switch 3 status
-    #pin 12, 13 (GPIO 18, 27)
-    return valueOfPin
-def wrbbsw(1)
-    #Turn on/off baseball switch 1
-    #pin 26(pos 0), 27(pos 1) (GPIO 7, IDSD)
-    if bbsval1 = 0
-        write(7,1)       
-        write(ID_SD,0)
-    if bbsval1 = 1
-        write(ID_SD,1)
-        write(7,0)
-def wrbbsw(2)
-    #Turn on/off baseball switch 2
-    #pin 23(pos 0), 24(pos 1) (GPIO 11, 8)
-    if bbsval1 = 0
-        write(11,1)
-        write(8,0)
-    if bbsval1 = 1
-        write(8,1)
-        write(11,0)
-def wrbbsw(3)
-    #Turn on/off baseball switch 3
-    #pin 21(pos 0), 22(pos 1) (GPIO 9, 25)
-    if bbsval1 = 0
-        write(9,1)
-        write(25,0)
-    if bbsval1 = 1
-        write(25,1)
-        write(9,0)
-def rdnoisesw()
-    #Read noise switch status.
-    read(22)
-def wrnoisesw()
-    #Change noise switch position.
-def rdADch(ad)
-'''
