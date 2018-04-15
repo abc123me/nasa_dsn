@@ -12,6 +12,9 @@ if(sys.version_info[0] < 3): #Check python version
 from subprocess import call
 from os.path import isfile
 from os.path import isdir
+
+
+
 #A GPIOError class for making debugging of GPIO related errors alot easier
 class GPIOError(Exception): #Base class for handling GPIO related errors
     def __init__(self, pin, step, message):
@@ -20,10 +23,14 @@ class GPIOError(Exception): #Base class for handling GPIO related errors
         self.message = message
     def __str__(self):
         return "GPIO Error during " + self.step + " step! Caused by: " + self.message
+    
+    
+    
 def fwrite(file, toWrite):
     f = open(file, "w")
     f.write(str(toWrite))
-   # f.close()
+
+
 #A GPIOPin class for declaring GPIO pins
 class GPIOPin:
     def __init__(self, pin): #Constructor called when object is created, takes in the pin number for the specified gpio pin
@@ -65,7 +72,7 @@ class GPIOPin:
         mode = "in"
         if(isOutput):
             mode = "out"
-        if(not self.exported):
+        if(not self.checkExport()):
             self.export()
         pinf = self.pinStr + "/direction"
         if(not isfile(pinf)):
@@ -99,3 +106,62 @@ class GPIOPin:
         out = self.valueFile.read()
         val = int(out)
         return (val > 0)
+    
+    
+    
+#A EMULATED GPIOPin class for declaring GPIO pins but emulating them (aka theyre not real pins)
+class EmulatedGPIOPin:
+    def __init__(self, pin): #Constructor called when object is created, takes in the pin number for the specified gpio pin
+        self.pinID = pin
+        self.exported = False
+        self.isOutput = False
+        print("Emulating GPIO pin: " + str(self.pinID))
+        from random import randint
+    def __del__(self): #Deconstructer called when object is no longer used
+        print("Stopped emulation of GPIO pin: " + str(self.pinID))
+    def __str__(self):
+        return "Emulated GPIO pin " + str(self.pinID)
+
+    #Export and unexport subroutines handled by setMode and destructor, not the end user
+    #Exports the pin
+    def export(self):
+        self.exported = True
+        print("Exported GPIO pin: " + str(self.pinID))
+    #Unexports the pin
+    def unexport(self):
+        self.exported = False
+        print("Un-Exported GPIO pin: " + str(self.pinID))
+    #Checks if pin is exported
+    def checkExport(self):
+        return self.exported;
+
+    #Sets the mode of the GPIO pin, should be handled by end user first
+    def setMode(self, isOutput):
+        mode = "in"
+        if(isOutput):
+            mode = "out"
+        if(not self.checkExport()):
+            self.export()
+        print("Set GPIO pin " + str(self.pinID) + " to output!")
+        self.mode = mode
+        self.isOutput = isOutput
+    #Cool extensions methods for setMode
+    def setInput(self):
+        self.setMode(False)
+    def setOutput(self):
+        self.setMode(True)
+
+    #Reading and writing to pins, should be handled by end user
+    #Write a value to the specified GPIO pin
+    def write(self, val):
+        w = "0"
+        if(val):
+            w = "1"
+        if(not self.exported):
+            raise GPIOError(self, "write", "Pin not exported, export with setMode(mode) or export()")
+        if(not self.isOutput):
+            raise GPIOError(self, "write", "Cannot write to input pin, set mode with setMode(mode)!")
+        print("Wrote " + w + " to GPIO " + str(self.pinID))
+    #Read the value of a specified GPIO pin
+    def digitalRead(self):
+        return (randint(0, 100) > 50)
