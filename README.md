@@ -1,7 +1,6 @@
 # nasa_dsn
 NASA Deep space network stuff
-
-## GPIO
+## pyGPIO
 For GPIO use pygpio since it is currently working and is simple to use, heres some example code:
 ``` python
 import pygpio                            #Imports the pygpio.py file, make sure it is in the same directory as your script!
