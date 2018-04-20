@@ -23,9 +23,9 @@ class GPIOError(Exception): #Base class for handling GPIO related errors
         self.message = message
     def __str__(self):
         return "GPIO Error during " + self.step + " step! Caused by: " + self.message
-    
-    
-    
+
+
+
 def fwrite(file, toWrite):
     f = open(file, "w")
     f.write(str(toWrite))
@@ -39,13 +39,11 @@ class GPIOPin:
         self.pinStr = ""
         self.isOutput = False
         self.valueFile = None
+        self.isNegated = False
         if(not isfile("/sys/class/gpio/export")):
             raise GPIOError(self, "init", "GPIO is unsupported on your system! (/sys/class/gpio/export don't exist)")
         if(not isfile("/sys/class/gpio/unexport")):
             raise GPIOError(self, "init", "GPIO is unsupported on your system! (/sys/class/gpio/unexport don't exist)")
-    def __del__(self): #Deconstructer called when object is no longer used
-        if(self.checkExport()):
-            self.unexport()
     def __str__(self):
         return "GPIO pin " + str(self.pinID)
 
@@ -67,7 +65,7 @@ class GPIOPin:
         self.exported = exp;
         return exp;
 
-    #Sets the mode of the GPIO pin, should be handled by end user first
+    #Sets the mode of the GPIO pin, should be handled by the end user first
     def setMode(self, isOutput):
         mode = "in"
         if(isOutput):
@@ -93,6 +91,8 @@ class GPIOPin:
     #Reading and writing to pins, should be handled by end user
     #Write a value to the specified GPIO pin
     def write(self, val):
+        if(self.isNegated):
+            val = not val
         w = "0"
         if(val):
             w = "1"
@@ -103,18 +103,25 @@ class GPIOPin:
         fwrite(self.pinStr + "/value", w)
     #Read the value of a specified GPIO pin
     def digitalRead(self):
+        if(not self.exported):
+            raise GPIOError(self, "read", "Pin not exported, export with setMode(mode) or export()")
+        if(self.isOutput):
+            raise GPIOError(self, "read", "Cannot read from output pin, set mode with setMode(mode)!")
+        self.valueFile.seek(0)
         out = self.valueFile.read()
         val = int(out)
-        return (val > 0)
-    
-    
-    
+        if(self.isNegated):
+            return not(val > 0)
+        else:
+            return (val > 0)
+
 #A EMULATED GPIOPin class for declaring GPIO pins but emulating them (aka theyre not real pins)
 class EmulatedGPIOPin:
-    def __init__(self, pin): #Constructor called when object is created, takes in the pin number for the specified gpio pin
+    def __init__(self, pin, isNegated): #Constructor called when object is created, takes in the pin number for the specified gpio pin
         self.pinID = pin
         self.exported = False
         self.isOutput = False
+        self.isNegated = False
         from random import randint
     def __str__(self):
         return "Emulated GPIO pin " + str(self.pinID)
@@ -157,10 +164,16 @@ class EmulatedGPIOPin:
             raise GPIOError(self, "write", "Pin not exported, export with setMode(mode) or export()")
         if(not self.isOutput):
             raise GPIOError(self, "write", "Cannot write to input pin, set mode with setMode(mode)!")
+        if(self.isNegated):
+            val = not val
         if(val):
             print(colors.cyan + "Set GPIO " + str(self.pinID) + " to " + colors.green + "HIGH" + colors.reset)
         else:
             print(colors.cyan + "Set GPIO " + str(self.pinID) + " to " + colors.red + "LOW" + colors.reset)
     #Read the value of a specified GPIO pin
     def digitalRead(self):
+        if(not self.exported):
+            raise GPIOError(self, "read", "Pin not exported, export with setMode(mode) or export()")
+        if(self.isOutput):
+            raise GPIOError(self, "read", "Cannot read from output pin, set mode with setMode(mode)!")
         return (randint(0, 100) > 50)
