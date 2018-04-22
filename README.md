@@ -10,7 +10,7 @@ EMULATING_NOISE_SOURCE = True #Modifies the isNoiseSourceOn to return the correc
 #TO HERE
 ```
 # iol Package (and asc. libraries)
-The iol package stands for __I__nput __O__utput __L__ibraries (iol), meaning it is the single codebase for ALL of the input/output related code, it currently includes the libraries for reading from the ADC, Baseball switches, and GPIO pins
+The iol package stands for *I*nput *O*utput *L*ibraries (iol), meaning it is the single codebase for ALL of the input/output related code, it currently includes the libraries for reading from the ADC, Baseball switches, and GPIO pins
 ## iol.pygpio
 For GPIO use pygpio since it is currently working and is simple to use, heres some example code:
 ``` python
