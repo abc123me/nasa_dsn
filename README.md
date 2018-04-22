@@ -1,4 +1,4 @@
-##Debugging
+## Debugging
 When adding the following to the top of main.py it will put everything in a "debug" mode where all status pins are ignored and no GPIO pins are actually set
 ``` python
 #IMPORTANT: COMMENT EVERYTHING FROM HERE OUT if you are testing/running the code on the real thing
