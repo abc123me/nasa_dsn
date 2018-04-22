@@ -1,5 +1,13 @@
-# nasa_dsn
-NASA Deep space network stuff
+##Debugging
+When adding the following to the top of main.py it will put everything in a "debug" mode where all status pins are ignored and no GPIO pins are actually set
+``` python
+#IMPORTANT: COMMENT EVERYTHING FROM HERE OUT if you are testing/running the code on the real thing
+import iol
+iol.MAKE_EMULATED() #Sets all GPIO pins, and Baseball switch to emulated mode
+EMULATING_TRANSLATOR = True #Modifies the isTranslatorOn to return the correct value every time (ignoring status pins)
+EMULATING_NOISE_SOURCE = True #Modifies the isNoiseSourceOn to return the correct value every time (ignoring status pins)
+#TO HERE
+```
 ## iol.pygpio
 For GPIO use pygpio since it is currently working and is simple to use, heres some example code:
 ``` python
