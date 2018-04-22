@@ -36,6 +36,9 @@ baseball.setPosition("a")                #Puts the switch in the A position
 baseball.setPosition(True)               #Puts the switch in the A position
 baseball.setPosition("b")                #Puts the switch in the B position
 baseball.setPosition(False)              #Puts the switch in the B position
-
 baseball.swapPos()                       #This will swap it's position
+baseball.getPosition()                   #Gets the position (returns an "a" or "b")
+baseball.reset()                         #Resets both setting pins to False
+baseball.setSwitchingDelay(time)         #Sets the switching delay
+baseball.getDelay()                      #Gets the switching delay in seconds   
 ```
