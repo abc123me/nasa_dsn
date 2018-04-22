@@ -11,6 +11,8 @@ pin.digitalRead()                        #Only works for input pins
 ```
 Also, The GPIO library requires superuser privledges so use sudo or run as root (or creating a gpio group and adding the user to that)
 An example led blink script `blink_example.py` was created to demonstrate how to use the GPIO library
+
+As an extension of the GPIO library I created the Baseball library for controlling the three baseball switches that are nescessary, this will deal with preventing the positions from becoming locked, also in no way can a software bug cause the switch to not activated due to the redundancy added by first setting both of the position pins to LOW then bringing the required pin to HIGH
 ## iol.baseball
 ``` python
 from iol.baseball import BaseballSwitch
