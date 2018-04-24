@@ -1,4 +1,5 @@
 import time
+from errors import StatusError
 from cli import colors
 
 class BaseballSwitch:
@@ -31,7 +32,7 @@ class BaseballSwitch:
 		#Check the unexpected positions
 		if(not (a and b)):
 			print(colors.red + "Error: Baseball switch is not in position A nor position B" + colors.reset)
-			raise IOError("Baseball switch is not in position A nor position B?")
+			raise StatusError("Baseball switch", "Baseball switch (" + self.name + ") is not in position A nor position B?")
 		print(colors.red + "Error: Baseball switch is in position A and position B?" + colors.reset)
 		raise IOError("Baseball switch is in position A and position B?")
 	def setPosition(self, isAPosition): #Sets the positions based on the isAPosition parameter, can be a string ("a" or "b") or boolean
@@ -48,7 +49,7 @@ class BaseballSwitch:
 			if(pos != "a" and (not self.ignoreStatus)):
 				self.reset()
 				print(colors.red + "Error: Baseball switch " + self.name + " did not switch to position A within 0.25s it is still in position " + pos + colors.reset)
-				raise IOError("Baseball switch " + self.name + " did not switch to position A within 0.25s it is still in position " + pos)
+				raise StatusError("Baseball switch", "Baseball switch " + self.name + " did not switch to position A within 0.25s it is still in position " + pos)
 		else:
 			self.posB.write(True)
 			time.sleep(self.switchDelay)
@@ -56,7 +57,7 @@ class BaseballSwitch:
 			if(pos != "b" and (not self.ignoreStatus)):
 				self.reset()
 				print(colors.red + "Error: Baseball switch " + self.name + " did not switch to position B within 0.25s it is still in position " + pos + colors.reset)
-				raise IOError("Baseball switch " + self.name + " did not switch to position B within 0.25s it is still in position " + pos)
+				raise StatusError("Baseball switch", "Baseball switch " + self.name + " did not switch to position B within 0.25s it is still in position " + pos)
 	def reset(self): #Resets both setting pins to False
 		self.posA.write(False)
 		self.posB.write(False)

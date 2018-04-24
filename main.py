@@ -5,13 +5,14 @@ if(sys.version_info[0] < 3): #Check python version
 EMULATING_NOISE_SOURCE = False
 EMULATING_TRANSLATOR = False
 #IMPORTANT: COMMENT EVERYTHING FROM HERE OUT if you are testing/running the code on the real thing
-import iol
-iol.MAKE_EMULATED() 
-EMULATING_TRANSLATOR = True
-EMULATING_NOISE_SOURCE = True
+#import iol
+#iol.MAKE_EMULATED()
+#EMULATING_TRANSLATOR = True
+#EMULATING_NOISE_SOURCE = True
 #TO HERE
 
 import time
+from errors import StatusError
 from iol.pygpio import GPIOPin
 from cli import colors
 from iol.baseball import BaseballSwitch
@@ -23,12 +24,12 @@ __translatorActive = False
 ''' RELAY CONTROL PINS
 18		*		Relay Control 8	GPIO 24	Turns on Noise Source
 19		*		Relay Control 7	GPIO 10	Turns on Translator path
-20	GND					
+20	GND
 21		*		Relay Control 6	GPIO 9	BBSW 3 A setting
 22		*		Relay Control 5	GPIO 25	BBSW 3 B setting
 23		*		Relay Control 4	GPIO 11	BBSW 2 A setting
 24		*		Relay Control 3	GPIO 8	BBSW 2 B setting
-25	GND					
+25	GND
 26		*		Relay Control 2	GPIO 7	BBSW 1 A setting
 27		*		Relay Control 1	IDSD	BBSW 1 B setting
 '''
@@ -54,11 +55,11 @@ print(colors.green + "Success!" + colors.reset)
 ''' TRANSMIT LEVEL CONTROL BITS
 28		*		Trans Level Ctl Bit 0	IDSC	   Signal Attn Bit 0 LSB   .25 dB
 29		*		Trans Level Ctl Bit 1	GPIO 5 	 Signal Attn Bit 1       .5 dB
-30	GND					
+30	GND
 31		*		Trans Level Ctl Bit 2	GPIO 6	 Signal Attn Bit 2       1 dB
 32		*		Trans Level Ctl Bit 3	GPIO 12	 Signal Attn Bit 3       2 dB
 33		*		Trans Level Ctl Bit 4	GPIO 13	 Signal Attn Bit 4       4 dB
-34	GND					
+34	GND
 35		*		Trans Level Ctl Bit 5	GPIO 19  Signal Attn Bit 5       8 dB
 36		*		Trans Level Ctl Bit 6	GPIO 16	 Signal Attn Bit 6       16 dB
 37		*		Trans Level Ctl Bit 7	GPIO 26	 Signal Attn Bit 7 MSB   32 dB
@@ -72,9 +73,9 @@ print(colors.green + "Success!" + colors.reset)
 ''' TRANSLATOR AND NOISE CONTROL
 Noise Status	    GPIO 22 	Noise ON
 Translator Status	GPIO 23 	Translator Path ON
-		
-Relay Control 8	    GPIO 24 	Turns on Noise Source     
-Relay Control 7	    GPIO 10 	Turns on Translator path  
+
+Relay Control 8	    GPIO 24 	Turns on Noise Source
+Relay Control 7	    GPIO 10 	Turns on Translator path
 '''
 print(colors.yellow + "Initializing status pins..." + colors.reset)
 noiseStatus = GPIOPin(22)
@@ -135,14 +136,14 @@ def setTranslatorPath(enable): #Disables or enables the translator
 		if(not isTranslatorOn()):
 			translatorPathEnable.write(False) #Stop trying to turn it on, since it will just risk damage
 			print(colors.red + "Translator failed to turn on within 0.25s" + colors.reset)
-			raise IOError("Translator did not turn on!")
+			raise StatusError("Translator", "Did not turn on!")
 	else:
 		translatorPathEnable.write(False)
 		time.sleep(0.25)
 		__translatorActive = False
 		if(isTranslatorOn()):
 			print(colors.red + "Translator failed to turn off within 0.25s" + colors.reset)
-			raise IOError("Translator did not turn off, did the relay contacts weld together?") 
+			raise StatusError("Translator", "Did not turn off, did the relay contacts weld together?") 
 def setNoiseSource(enable): #Disables or enables the noise source
 	global __noiseSourceActive
 	if(enable):
@@ -152,24 +153,24 @@ def setNoiseSource(enable): #Disables or enables the noise source
 		if(not isNoiseSourceOn()):
 			noiseSourceEnable.write(False) #Stop trying to turn it on, since it will just risk damage
 			print(colors.red + "Noise source failed to turn on within 0.25s" + colors.reset)
-			raise IOError("Noise source did not turn on!")
+			raise StatusError("Noise source", "Did not turn on!")
 	else:
 		noiseSourceEnable.write(False)
 		time.sleep(0.25)
 		__noiseSourceActive = False
 		if(isNoiseSourceOn()):
 			print(colors.red + "Noise source failed to turn off within 0.25s" + colors.reset)
-			raise IOError("Noise source did not turn off, did the relay contacts weld together?")
+			raise StatusError("Noise source", "Did not turn off, did the relay contacts weld together?")
 def decibelsToBinary(num): #Converts the decibel value input to the binary value output that needs to be written to the GPIO Pins
 	val = [False] * 8 #initialized the array with 8 False values
 	for i in range(7, -1, -1): #Start at the 8th bit and go down to the 0th bit, this dosen't start at the 7th bit and go to the -1st bit
 		#mdbv is the result of raising 2 to the power of the difference of the iterator and 2
 		#This puts mdbv in the range of 32 to .25 because 2 ^ -2 = 1 / 4 and 2 ^ 5 = 32 (aka Math)
-		mdbv = 2 ** (i - 2) 
+		mdbv = 2 ** (i - 2)
 		if(num >= mdbv): # If the number is greator than mdbv than subtract the number by it and set the current bit to true
 			num = num - mdbv;
 			val[i] = True
-	return val 
+	return val
 def setAttenuatorValue(db): #Sets the attenuator value to a specified decibel level
 	if(db < 0 or db > 63.75): #Make sure the level is in range for the 8 bit buffer
 		raise BufferError("Cannot set to " + str(db) + " because that exceeds the 8 bit buffer")

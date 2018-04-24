@@ -3,18 +3,19 @@ def clearTerm():
 def doNothing(selection):
 	pass
 
-'''
-Are you sure you would like to continue? [y/N] 
+''' 
+Are you sure you would like to continue? [y/N]
+The message parameter determines the message
 
 Returns True if yes, False if no
 '''
-def areYouSure():
-	response = input("Are you sure you would like to continue? [y/N]")
+def areYouSure(message = "Are you sure you would like to continue [y/N]? "):
+	response = input(message)
 	response = response.strip()
 	if(response.startswith("y") or response.startswith("Y")):
 		return True
 	return False
-'''
+''' 
 Menu header goes here:
 	0 - Option: OptionDesc
 	1 - Option: OptionDesc

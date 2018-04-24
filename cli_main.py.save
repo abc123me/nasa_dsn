@@ -1,5 +1,4 @@
 import time, cli
-from errors import StatusError
 from cli import colors
 from cli.ui import clearTerm, menu, MenuEntry
 
@@ -54,15 +53,7 @@ while True:
 	header = colors.yellow + "Main feed control" + colors.reset
 	entries = [setAttenuator, modifySwitch1, modifySwitch2, modifySwitch3, setTranslator, setNoise, exitPrgm]
 	prompt = colors.yellow + "Select an option: " + colors.reset
-	sel = None
-	try:
- 		sel = menu(header, entries, prompt)
-	except StatusError as error:
-		print(str(error))
-		if(not cli.ui.areYouSure(message = "Would you like to stay in the CLI [y/N]? ")):
-			print(colors.red + "Exiting now!" + colors.reset)
-			exit(1)
-		continue;
+	sel = menu(header, entries, prompt)
 
 	if(sel == modifySwitch1 or sel == modifySwitch2 or sel == modifySwitch3):
 		baseballMenu(sel.associatedSwitch)
