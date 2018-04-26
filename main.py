@@ -16,6 +16,7 @@ from errors import StatusError
 from iol.pygpio import GPIOPin
 from cli import colors
 from iol.baseball import BaseballSwitch
+from iol.adlib import ADC
 
 __attenuatorValue = "unknown"
 __noiseSourceActive = False
@@ -113,6 +114,11 @@ print(colors.yellow + "Initializing baseball switch 3" + colors.reset)
 baseballSwitch3 = BaseballSwitch("BBSW3", 9, 25, 18, 27)
 baseballSwitch3.initGPIO()
 print(colors.green + "Success!" + colors.reset)
+
+print(colors.yellow + "Initializing i2c ADC" + colors.reset)
+adc = ADC(0)
+adc.setup()
+print(colors.green + "Success!" + colors.reset)
 ''' 
 UTILITY FUNCTIONS FOR SETTING, GETTING AND GENERAL CONTROL
 '''
@@ -185,6 +191,8 @@ def toggleTranslator():
 	setTranslatorPath(not isTranslatorOn())
 def toggleNoiseSource():
 	setNoiseSource(not isNoiseSourceOn())
+def getAdcValue():
+	return adc.getValue()
 print(colors.green + "Success!" + colors.reset)
 print(colors.yellow + "Setting attenuator to 0 dB..." + colors.reset)
 setAttenuatorValue(0)
