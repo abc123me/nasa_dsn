@@ -1,0 +1,9 @@
+----Most packets----
+type:		<type of data>	#Required, no matter what
+TO:		<address>	#You can only have a TO
+FROM:		<address>	#or a FROM
+content:	<content>	#The content
+
+----RPC packet----
+type:	RPC
+to:	
