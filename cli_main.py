@@ -2,11 +2,16 @@ import time, cli
 from errors import StatusError
 from cli import colors
 from cli.ui import clearTerm, menu, MenuEntry
+from sys import argv
 
 if(__name__ != "__main__"):
   print(colors.red + "This cannot be used as a library, sorry!" + colors.reset)
   exit(1)
-
+for arg in argv:
+	if(arg == "--emulated"):
+		import iol
+		iol.MAKE_EMULATED()
+	
 #Helkper method that converbs a boolean into an ON or OFF statement (thats colored for coolness)
 def onOff(value):
 	if(value):

@@ -1,3 +1,5 @@
+from cli import colors
+
 class ADC:
 	def __init__(self, i2cID):
 		from smbus import SMBus
@@ -12,9 +14,9 @@ class ADC:
       
 class EmulatedADC:
 	def __init__(self, i2cID):
-		print(colors.cyan + "Initialized ADC on I2C bus ID: " + str(i2cBusID) + colors.reset)
+		print(colors.cyan + "Initialized ADC on I2C bus ID: " + str(i2cID) + colors.reset)
 		self.i2cID = i2cID
 	def setup(self):
-		print(colors.cyan + "Setup ADC on I2C bus ID: " + str(id) + colors.reset)
+		print(colors.cyan + "Setup ADC on I2C bus ID: " + str(self.i2cID) + colors.reset)
 	def getValue(self):
 		return 0

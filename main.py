@@ -2,14 +2,9 @@ import sys
 if(sys.version_info[0] < 3): #Check python version
 	raise "This only supports python3!"
 
-EMULATING_NOISE_SOURCE = False
-EMULATING_TRANSLATOR = False
-#IMPORTANT: COMMENT EVERYTHING FROM HERE OUT if you are testing/running the code on the real thing
-#import iol
-#iol.MAKE_EMULATED()
-#EMULATING_TRANSLATOR = True
-#EMULATING_NOISE_SOURCE = True
-#TO HERE
+import iol
+__EMULATING_NOISE_SOURCE = iol.IS_EMULATED()
+__EMULATING_TRANSLATOR = iol.IS_EMULATED()
 
 import time
 from errors import StatusError
@@ -35,23 +30,11 @@ __translatorActive = False
 27		*		Relay Control 1	IDSD	BBSW 1 B setting
 '''
 print(colors.yellow + "Initializing relay control pins... " + colors.reset)
-baseballSwitch1B = GPIOPin(0)
-baseballSwitch1A = GPIOPin(7)
-baseballSwitch2B = GPIOPin(8)
-baseballSwitch2A = GPIOPin(11)
-baseballSwitch3B = GPIOPin(25)
-baseballSwitch3A = GPIOPin(9)
-translatorPathEnable = GPIOPin(10)
-noiseSourceEnable = GPIOPin(24)
+__translatorPathEnable = GPIOPin(10)
+__noiseSourceEnable = GPIOPin(24)
 #Set them all to outputs
-baseballSwitch1A.setOutput()
-baseballSwitch1B.setOutput()
-baseballSwitch2A.setOutput()
-baseballSwitch2B.setOutput()
-baseballSwitch3A.setOutput()
-baseballSwitch3B.setOutput()
-translatorPathEnable.setOutput()
-noiseSourceEnable.setOutput()
+__translatorPathEnable.setOutput()
+__noiseSourceEnable.setOutput()
 print(colors.green + "Success!" + colors.reset)
 ''' TRANSMIT LEVEL CONTROL BITS
 28		*		Trans Level Ctl Bit 0	IDSC	   Signal Attn Bit 0 LSB   .25 dB
@@ -66,8 +49,8 @@ print(colors.green + "Success!" + colors.reset)
 37		*		Trans Level Ctl Bit 7	GPIO 26	 Signal Attn Bit 7 MSB   32 dB
 '''
 print(colors.yellow + "Initializing transmit level pins..." + colors.reset)
-transLevel = [GPIOPin(1), GPIOPin(5), GPIOPin(6), GPIOPin(12), GPIOPin(13), GPIOPin(19), GPIOPin(16), GPIOPin(26)]
-for pin in transLevel:
+__transLevel = [GPIOPin(1), GPIOPin(5), GPIOPin(6), GPIOPin(12), GPIOPin(13), GPIOPin(19), GPIOPin(16), GPIOPin(26)]
+for pin in __transLevel:
 	pin.setOutput()
 	pin.write(False)
 print(colors.green + "Success!" + colors.reset)
@@ -126,47 +109,47 @@ print(colors.yellow + "Initializing utility functions..." + colors.reset)
 def getAttenuatorValue():
 	return __attenuatorValue
 def isTranslatorOn():
-	if(EMULATING_TRANSLATOR):
+	if(__EMULATING_TRANSLATOR):
 		return __translatorActive
 	return translatorStatus.digitalRead()
 def isNoiseSourceOn():
-	if(EMULATING_NOISE_SOURCE):
+	if(__EMULATING_NOISE_SOURCE):
 		return __noiseSourceActive
 	return noiseStatus.digitalRead()
 def setTranslatorPath(enable): #Disables or enables the translator
 	global __translatorActive
 	if(enable):
-		translatorPathEnable.write(True)
-		time.sleep(0.25)
+		__translatorPathEnable.write(True)
 		__translatorActive = True
+		time.sleep(0.25)
 		if(not isTranslatorOn()):
-			translatorPathEnable.write(False) #Stop trying to turn it on, since it will just risk damage
+			__translatorPathEnable.write(False) #Stop trying to turn it on, since it will just risk damage
 			print(colors.red + "Translator failed to turn on within 0.25s" + colors.reset)
 			raise StatusError("Translator", "Did not turn on!")
 	else:
-		translatorPathEnable.write(False)
-		time.sleep(0.25)
+		__translatorPathEnable.write(False)
 		__translatorActive = False
+		time.sleep(0.25)
 		if(isTranslatorOn()):
 			print(colors.red + "Translator failed to turn off within 0.25s" + colors.reset)
-			raise StatusError("Translator", "Did not turn off, did the relay contacts weld together?") 
+			raise StatusError("Translator", "Did not turn off!") 
 def setNoiseSource(enable): #Disables or enables the noise source
 	global __noiseSourceActive
 	if(enable):
-		noiseSourceEnable.write(True)
+		__noiseSourceEnable.write(True)
 		time.sleep(0.25)
 		__noiseSourceActive = True
 		if(not isNoiseSourceOn()):
-			noiseSourceEnable.write(False) #Stop trying to turn it on, since it will just risk damage
+			__noiseSourceEnable.write(False) #Stop trying to turn it on, since it will just risk damage
 			print(colors.red + "Noise source failed to turn on within 0.25s" + colors.reset)
 			raise StatusError("Noise source", "Did not turn on!")
 	else:
-		noiseSourceEnable.write(False)
+		__noiseSourceEnable.write(False)
 		time.sleep(0.25)
 		__noiseSourceActive = False
 		if(isNoiseSourceOn()):
 			print(colors.red + "Noise source failed to turn off within 0.25s" + colors.reset)
-			raise StatusError("Noise source", "Did not turn off, did the relay contacts weld together?")
+			raise StatusError("Noise source", "Did not turn off!")
 def decibelsToBinary(num): #Converts the decibel value input to the binary value output that needs to be written to the GPIO Pins
 	val = [False] * 8 #initialized the array with 8 False values
 	for i in range(7, -1, -1): #Start at the 8th bit and go down to the 0th bit, this dosen't start at the 7th bit and go to the -1st bit
@@ -182,9 +165,9 @@ def setAttenuatorValue(db): #Sets the attenuator value to a specified decibel le
 		raise BufferError("Cannot set to " + str(db) + " because that exceeds the 8 bit buffer")
 	val = decibelsToBinary(db)
 	for i in range(0, 8): #First set them all to zero to make sure we don't accidentally transmit on a higher power then we want
-		transLevel[i].write(False)
+		__transLevel[i].write(False)
 	for i in range(0, 8): #This will set the lowest bits FIRST so the power will start off small and rise
-		transLevel[i].write(val[i])
+		__transLevel[i].write(val[i])
 	global __attenuatorValue
 	__attenuatorValue = db #store the new value for later use with getAttenuatorValue
 def toggleTranslator():
